@@ -46,7 +46,8 @@
             background: var(--bg-primary);
             color: var(--text-primary);
             height: 100vh;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
             position: relative;
             font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
         }
@@ -169,7 +170,8 @@
             padding: 3rem;
             box-shadow: var(--shadow-xl);
             text-align: center;
-            min-width: 400px;
+            width: min(95%, 400px);
+            min-width: 0;
             position: relative;
             overflow: hidden;
         }
