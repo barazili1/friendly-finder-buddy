@@ -40,7 +40,12 @@ body {
 .game-bg,
 .game-bg::before,
 .background,
+.animated-bg,
+.animated-bg::before,
 .bg-animation,
+.bg-gradient,
+.cosmic-bg,
+.grid-bg,
 .stars,
 .star,
 .particles,
@@ -271,4 +276,55 @@ input:focus, select:focus, textarea:focus {
 ::selection {
   background: rgba(144, 214, 0, 0.35);
   color: #fff;
+}
+
+/* ---------- Dark surfaces that used the old navy (#0a0e27) ---------- */
+.intro-animation,
+.loading-overlay,
+.sidebar,
+.side-panel,
+.top-nav,
+.bottom-nav,
+.footer,
+.header-bar {
+  background: linear-gradient(160deg, rgba(144, 214, 0, 0.06), rgba(0, 0, 0, 0.94)) !important;
+  border-color: rgba(144, 214, 0, 0.22) !important;
+  color: #fff;
+}
+
+.overlay,
+.backdrop {
+  background: rgba(0, 0, 0, 0.82) !important;
+}
+
+.game-type,
+.game-tag,
+.game-provider,
+.game-category {
+  background: rgba(144, 214, 0, 0.12) !important;
+  border: 1px solid rgba(144, 214, 0, 0.3) !important;
+  color: #cfe9a3 !important;
+}
+
+.section-title,
+.section-title::after {
+  color: #b6ff26 !important;
+}
+.section-title::after {
+  background: linear-gradient(90deg, transparent, #90d600, transparent) !important;
+}
+
+.loading-spinner::before,
+.loading-spinner::after {
+  border-top-color: #90d600 !important;
+  border-color: rgba(144, 214, 0, 0.25) !important;
+  border-top: 3px solid #90d600 !important;
+}
+
+.sidebar-menu a {
+  color: #d9f0b0 !important;
+}
+.sidebar-menu a:hover {
+  color: #b6ff26 !important;
+  background: rgba(144, 214, 0, 0.1) !important;
 }
