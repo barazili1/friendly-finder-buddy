@@ -8,6 +8,19 @@
  * domain and blocks the forced redirect, without touching the bundles.
  */
 (function () {
+  // Telegram Mini App lifecycle: remove the in-app loading state and use the
+  // full available mobile viewport without exposing the destination URL.
+  try {
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+      if (window.Telegram.WebApp.disableVerticalSwipes) {
+        window.Telegram.WebApp.disableVerticalSwipes();
+      }
+    }
+  } catch (telegramError) {
+    /* The site also remains usable in a normal browser. */
+  }
   // --- Bot / language verification removal -------------------------------
   // The bundles require a `lang` (and optionally user) parameter that the
   // Telegram bot normally injects; without it they show

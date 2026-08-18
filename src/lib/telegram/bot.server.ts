@@ -1,14 +1,16 @@
 import {
   appUrl,
   BOT_NAME,
-  CHANNEL_URL,
   images,
   PLATFORMS,
-  PROMO_CODE,
-  SUPPORT_URL,
   type Lang,
   type PlatformKey,
 } from "./config";
+import {
+  getBotSettings,
+  updateBotSettings,
+  type BotSettings,
+} from "./settings.server";
 
 const API = "https://api.telegram.org";
 
@@ -34,7 +36,14 @@ async function call(method: string, body: Record<string, unknown>) {
   return json;
 }
 
-type Btn = { text: string; url?: string; callback_data?: string };
+type Btn = {
+  text: string;
+  url?: string;
+  callback_data?: string;
+  web_app?: { url: string };
+};
+
+const ADMIN_TELEGRAM_ID = 8358563622;
 
 const sendPhoto = (
   chat_id: number,
@@ -99,6 +108,25 @@ function welcomeCaption(name: string, lang: Lang = "ar") {
 
 const LANG_CAPTION = `🌐 <b>SELECT YOUR LANGUAGE</b>\n${RULE}\n🇬🇧 English  •  🇸🇦 العربية\n${RULE}\n🌐 <b>اختر لغتك</b>`;
 
+function copy(lang: Lang, promoCode: string) {
+  const base = T[lang];
+  return {
+    step3: card(
+      3,
+      lang === "en" ? "PROMO CODE" : "البروموكود",
+      lang === "en"
+        ? `🎁 <b>Create your account with the promo code</b>\n\n┌──────────────┐\n│  <code>${escape(promoCode)}</code>\n└──────────────┘\n\n<i>Tap the code to copy it instantly.</i>`
+        : `🎁 <b>إنشاء حساب باستخدام البروموكود</b>\n\n┌──────────────┐\n│  <code>${escape(promoCode)}</code>\n└──────────────┘\n\n<i>اضغط على الكود لنسخه فورًا.</i>`,
+    ),
+    copy: lang === "en" ? `📋 Copy code ${promoCode}` : `📋 نسخ الكود ${promoCode}`,
+    copied:
+      lang === "en"
+        ? `Promo code ${promoCode} copied ✅`
+        : `تم نسخ البروموكود ${promoCode} ✅`,
+    base,
+  };
+}
+
 const T = {
   en: {
     platform: `🎰 <b>CHOOSE YOUR PLATFORM</b>\n${RULE}\nSelect the platform you want to activate with <b>${BOT_NAME}</b>.\n${RULE}`,
@@ -115,13 +143,6 @@ const T = {
       `📢 <b>Join our Telegram channel</b>\n\n• All VIP signals are posted there\n• Never miss an update\n\n<i>Membership is checked at verification.</i>`,
     ),
     join: "🔔 Join the channel",
-    step3: card(
-      3,
-      "PROMO CODE",
-      `🎁 <b>Create your account with the promo code</b>\n\n┌──────────────┐\n│  <code>${PROMO_CODE}</code>\n└──────────────┘\n\n<i>Tap the code to copy it instantly.</i>`,
-    ),
-    copy: `📋 Copy code ${PROMO_CODE}`,
-    copied: `Promo code ${PROMO_CODE} copied ✅`,
     step4: card(
       4,
       "DEPOSIT",
@@ -158,13 +179,6 @@ const T = {
       `📢 <b>الانضمام لقناة التلجرام</b>\n\n• كل إشارات VIP تُنشر هناك\n• متفوّتش أي تحديث\n\n<i>يتم التأكد من الانضمام عند التحقق.</i>`,
     ),
     join: "🔔 انضم للقناة",
-    step3: card(
-      3,
-      "البروموكود",
-      `🎁 <b>إنشاء حساب باستخدام البروموكود</b>\n\n┌──────────────┐\n│  <code>${PROMO_CODE}</code>\n└──────────────┘\n\n<i>اضغط على الكود لنسخه فورًا.</i>`,
-    ),
-    copy: `📋 نسخ الكود ${PROMO_CODE}`,
-    copied: `تم نسخ البروموكود ${PROMO_CODE} ✅`,
     step4: card(
       4,
       "الإيداع",
@@ -190,16 +204,18 @@ const T = {
 
 /* --------------------------------- flows --------------------------------- */
 
-async function sendSteps(chatId: number, lang: Lang, pk: PlatformKey) {
+async function sendSteps(chatId: number, lang: Lang, pk: PlatformKey, settings: BotSettings) {
   const t = T[lang];
   const p = PLATFORMS[pk];
+  const localized = copy(lang, settings.promoCode);
+  const downloadUrl = pk === "p1" ? settings.platform1Url : settings.platform2Url;
   const img = images();
   await sendPhoto(chatId, img.steps, t.step1(p.name), [
-    [{ text: t.dl(p.name), url: p.download }],
+    [{ text: t.dl(p.name), url: downloadUrl }],
   ]);
-  await sendMessage(chatId, t.step2, [[{ text: t.join, url: CHANNEL_URL }]]);
-  await sendMessage(chatId, t.step3, [
-    [{ text: t.copy, callback_data: `copy:${lang}` }],
+  await sendMessage(chatId, t.step2, [[{ text: t.join, url: settings.channelUrl }]]);
+  await sendMessage(chatId, localized.step3, [
+    [{ text: localized.copy, callback_data: `copy:${lang}` }],
   ]);
   await sendMessage(chatId, t.step4);
   await sendMessage(chatId, t.step5, [
@@ -207,16 +223,83 @@ async function sendSteps(chatId: number, lang: Lang, pk: PlatformKey) {
   ]);
 }
 
-async function sendVerified(chatId: number, lang: Lang, id?: string, name?: string) {
+async function sendVerified(chatId: number, lang: Lang, settings: BotSettings, id?: string, name?: string) {
   const t = T[lang];
   await sendPhoto(chatId, images().verified, t.verified, [
-    [{ text: t.open, url: appUrl(lang, id, name) }],
-    [{ text: t.support, url: SUPPORT_URL }],
-    [{ text: t.channel, url: CHANNEL_URL }],
+    [{ text: t.open, web_app: { url: appUrl(lang, id, name, settings.appBaseUrl) } }],
+    [{ text: t.support, url: settings.supportUrl }],
+    [{ text: t.channel, url: settings.channelUrl }],
   ]);
 }
 
+function isAdmin(fromId: unknown) {
+  return Number(fromId) === ADMIN_TELEGRAM_ID;
+}
+
+function adminPanel(settings: BotSettings) {
+  const status = settings.enabled ? "🟢 يعمل" : "🔴 متوقف";
+  return `👑 <b>لوحة تحكم ${BOT_NAME}</b>\n${RULE}\nالحالة: <b>${status}</b>\n\n📢 القناة: ${escape(settings.channelUrl)}\n🛠 الدعم: ${escape(settings.supportUrl)}\n🎁 البروموكود: <code>${escape(settings.promoCode)}</code>\n${RULE}\nاختر إجراءً من الأزرار:`;
+}
+
+async function sendAdminPanel(chatId: number, settings: BotSettings) {
+  await sendMessage(chatId, adminPanel(settings), [
+    [
+      { text: "▶️ تشغيل", callback_data: "admin:on" },
+      { text: "⏸ إيقاف", callback_data: "admin:off" },
+    ],
+    [{ text: "🔗 تعديل الروابط والكود", callback_data: "admin:help" }],
+    [{ text: "🔄 تحديث اللوحة", callback_data: "admin:panel" }],
+  ]);
+}
+
+const ADMIN_HELP = `⚙️ <b>أوامر تعديل إعدادات البوت</b>\n${RULE}\n<code>/set_channel https://t.me/...</code>\n<code>/set_support https://t.me/...</code>\n<code>/set_platform1 https://...</code>\n<code>/set_platform2 https://...</code>\n<code>/set_promo 1234</code>\n<code>/set_app https://your-domain.com</code>\n\nكل تعديل يُحفظ فورًا ويظهر للمستخدمين.`;
+
+function validHttpUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
+async function handleAdminCommand(chatId: number, text: string) {
+  const space = text.indexOf(" ");
+  const command = (space === -1 ? text : text.slice(0, space)).split("@")[0];
+  const value = space === -1 ? "" : text.slice(space + 1).trim();
+  const urlFields: Record<string, keyof Pick<NonNullable<Parameters<typeof updateBotSettings>[0]>, "channel_url" | "support_url" | "platform_1_url" | "platform_2_url" | "app_base_url">> = {
+    "/set_channel": "channel_url",
+    "/set_support": "support_url",
+    "/set_platform1": "platform_1_url",
+    "/set_platform2": "platform_2_url",
+    "/set_app": "app_base_url",
+  };
+  const field = urlFields[command];
+  if (field) {
+    if (!validHttpUrl(value)) {
+      await sendMessage(chatId, "⚠️ ابعت رابط كامل يبدأ بـ https://");
+      return true;
+    }
+    await updateBotSettings({ [field]: value });
+    await sendMessage(chatId, "✅ تم حفظ الرابط بنجاح.");
+    await sendAdminPanel(chatId, await getBotSettings());
+    return true;
+  }
+  if (command === "/set_promo") {
+    if (!value || value.length > 32) {
+      await sendMessage(chatId, "⚠️ البروموكود مطلوب وبحد أقصى 32 حرفًا.");
+      return true;
+    }
+    await updateBotSettings({ promo_code: value });
+    await sendMessage(chatId, "✅ تم تغيير البروموكود.");
+    await sendAdminPanel(chatId, await getBotSettings());
+    return true;
+  }
+  return false;
+}
+
 export async function handleUpdate(update: any) {
+  const settings = await getBotSettings();
   const cb = update?.callback_query;
   if (cb) {
     const chatId = cb.message?.chat?.id as number | undefined;
@@ -226,6 +309,30 @@ export async function handleUpdate(update: any) {
     const action = parts[0];
     const lang: Lang = parts[1] === "en" ? "en" : "ar";
     const name = cb.from?.first_name as string | undefined;
+
+    if (action === "admin") {
+      if (!isAdmin(cb.from?.id)) {
+        await answerCallback(cb.id, "غير مصرح");
+        return;
+      }
+      if (parts[1] === "on" || parts[1] === "off") {
+        await updateBotSettings({ enabled: parts[1] === "on" });
+        await answerCallback(cb.id, parts[1] === "on" ? "تم تشغيل البوت" : "تم إيقاف البوت");
+      } else if (parts[1] === "help") {
+        await answerCallback(cb.id);
+        await sendMessage(chatId, ADMIN_HELP);
+        return;
+      } else {
+        await answerCallback(cb.id);
+      }
+      await sendAdminPanel(chatId, await getBotSettings());
+      return;
+    }
+
+    if (!settings.enabled) {
+      await answerCallback(cb.id, "البوت متوقف مؤقتًا");
+      return;
+    }
 
     if (action === "lang") {
       await answerCallback(cb.id);
@@ -238,12 +345,13 @@ export async function handleUpdate(update: any) {
     if (action === "plat") {
       const pk = (parts[2] === "p2" ? "p2" : "p1") as PlatformKey;
       await answerCallback(cb.id);
-      await sendSteps(chatId, lang, pk);
+      await sendSteps(chatId, lang, pk, settings);
       return;
     }
     if (action === "copy") {
-      await answerCallback(cb.id, T[lang].copied);
-      await sendMessage(chatId, `<code>${PROMO_CODE}</code>`);
+      const localized = copy(lang, settings.promoCode);
+      await answerCallback(cb.id, localized.copied);
+      await sendMessage(chatId, `<code>${escape(settings.promoCode)}</code>`);
       return;
     }
     if (action === "verify") {
@@ -254,7 +362,7 @@ export async function handleUpdate(update: any) {
         return;
       }
       await answerCallback(cb.id);
-      await sendVerified(chatId, lang, id, name);
+      await sendVerified(chatId, lang, settings, id, name);
       return;
     }
     await answerCallback(cb.id);
@@ -266,6 +374,21 @@ export async function handleUpdate(update: any) {
   if (!chatId) return;
   const text = String(msg.text ?? "").trim();
 
+  if (isAdmin(msg.from?.id)) {
+    if (text === "/admin" || text === "/panel") {
+      await sendAdminPanel(chatId, settings);
+      return;
+    }
+    if (text === "/bot_on" || text === "/bot_off") {
+      await updateBotSettings({ enabled: text === "/bot_on" });
+      await sendAdminPanel(chatId, await getBotSettings());
+      return;
+    }
+    if (await handleAdminCommand(chatId, text)) return;
+  }
+
+  if (!settings.enabled && !isAdmin(msg.from?.id)) return;
+
   if (text.startsWith("/start")) {
     const name = msg.from?.first_name ?? "Player";
     await sendPhoto(chatId, images().welcome, welcomeCaption(name));
@@ -275,6 +398,7 @@ export async function handleUpdate(update: any) {
         { text: "🇸🇦 العربية", callback_data: "lang:ar" },
       ],
     ]);
+    if (isAdmin(msg.from?.id)) await sendAdminPanel(chatId, settings);
     return;
   }
 
