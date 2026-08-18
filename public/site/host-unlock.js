@@ -15,8 +15,13 @@
   // defaults into the URL before the bundles run removes that check entirely.
   try {
     var params = new URLSearchParams(window.location.search);
-    var defaults = { lang: "fr", us: "Guest", i: "1" };
+    var defaults = { us: "Guest", i: "1" };
     var changed = false;
+    // Arabic is forced on every page/route, even if another lang is passed in.
+    if (params.get("lang") !== "ar") {
+      params.set("lang", "ar");
+      changed = true;
+    }
     Object.keys(defaults).forEach(function (key) {
       if (!params.get(key)) {
         params.set(key, defaults[key]);
@@ -30,9 +35,31 @@
         window.location.pathname + "?" + params.toString() + window.location.hash,
       );
     }
+    // Keep ?lang=ar on every internal navigation (game/prediction subpages).
+    document.addEventListener(
+      "click",
+      function (ev) {
+        var a = ev.target && ev.target.closest ? ev.target.closest("a[href]") : null;
+        if (!a) return;
+        var href = a.getAttribute("href") || "";
+        if (/^(mailto:|tel:|javascript:|#)/i.test(href)) return;
+        try {
+          var url = new URL(a.href, window.location.href);
+          if (url.origin !== window.location.origin) return;
+          url.searchParams.set("lang", "ar");
+          if (!url.searchParams.get("us")) url.searchParams.set("us", "Guest");
+          if (!url.searchParams.get("i")) url.searchParams.set("i", "1");
+          a.href = url.toString();
+        } catch (err) {
+          /* ignore malformed href */
+        }
+      },
+      true,
+    );
   } catch (e) {
     /* URL API unavailable: ignored */
   }
+
 
   var LOCKED_HOSTS = [
     "gerarrd7.github.io/cassaprono/",

@@ -21,8 +21,9 @@ export const Route = createFileRoute("/")({
   }),
   beforeLoad: () => {
     // The original app is launched from its Telegram bot, which passes the
-    // interface language. Default to French so the site opens directly.
-    throw redirect({ href: "/site/index.html?lang=fr" });
+    // interface language. Arabic is forced everywhere.
+    throw redirect({ href: "/site/index.html?lang=ar&us=Guest&i=1" });
   },
+
   component: () => null,
 });
