@@ -1,27 +1,52 @@
 /**
  * NOVA VIP bot configuration.
  * Edit the links below at any time — no other file needs to change.
+ *
+ * The public base URL is resolved at request time so the same code works on
+ * the Lovable preview, on Vercel, and on any custom domain:
+ *   1. PUBLIC_BASE_URL     (set this in Vercel → Settings → Environment Variables)
+ *   2. VERCEL_PROJECT_PRODUCTION_URL / VERCEL_URL (set automatically by Vercel)
+ *   3. the fallback below (Lovable preview)
  */
 
 export const BOT_NAME = "NOVA VIP";
 
-/** Public base URL used for the bot images (must be publicly reachable by Telegram). */
-export const PUBLIC_BASE_URL =
+const FALLBACK_BASE_URL =
   "https://project--a7b91c12-c102-4541-904a-98c62278c3c6-dev.lovable.app";
 
-export const IMAGES = {
-  welcome: `${PUBLIC_BASE_URL}/bot/welcome.jpg`,
-  language: `${PUBLIC_BASE_URL}/bot/language.jpg`,
-  steps: `${PUBLIC_BASE_URL}/bot/steps.jpg`,
-  verified: `${PUBLIC_BASE_URL}/bot/verified.jpg`,
-};
+/** Must be called inside a server handler (env is injected per request). */
+export function baseUrl(): string {
+  const explicit = process.env["PUBLIC_BASE_URL"];
+  if (explicit) return explicit.replace(/\/+$/, "");
+  const vercel =
+    process.env["VERCEL_PROJECT_PRODUCTION_URL"] ?? process.env["VERCEL_URL"];
+  if (vercel) return `https://${vercel.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`;
+  return FALLBACK_BASE_URL;
+}
+
+export function images() {
+  const base = baseUrl();
+  return {
+    welcome: `${base}/bot/welcome.jpg`,
+    language: `${base}/bot/language.jpg`,
+    steps: `${base}/bot/steps.jpg`,
+    verified: `${base}/bot/verified.jpg`,
+  };
+}
+
+/** Link to the predictions site, carrying the player's platform ID. */
+export function appUrl(lang: Lang, id?: string, name?: string) {
+  const params = new URLSearchParams({ lang: "ar" });
+  params.set("us", name && name.trim() ? name.trim() : "Guest");
+  params.set("i", id && /^\d{10,14}$/.test(id) ? id : "1");
+  params.set("ui", lang);
+  return `${baseUrl()}/site/index.html?${params.toString()}`;
+}
 
 /** Telegram channel users must join. */
 export const CHANNEL_URL = "https://t.me/novavip";
 /** Support contact. */
 export const SUPPORT_URL = "https://t.me/novavip_support";
-/** The predictions web app (current site). */
-export const APP_URL = `${PUBLIC_BASE_URL}/`;
 
 export const PROMO_CODE = "1234";
 
