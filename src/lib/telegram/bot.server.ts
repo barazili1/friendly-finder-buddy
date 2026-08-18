@@ -265,7 +265,7 @@ function validHttpUrl(value: string) {
 
 async function handleAdminCommand(chatId: number, text: string) {
   const space = text.indexOf(" ");
-  const command = (space === -1 ? text : text.slice(0, space)).split("@")[0];
+  const command = (space === -1 ? text : text.slice(0, space)).split("@")[0] ?? "";
   const value = space === -1 ? "" : text.slice(space + 1).trim();
   const urlFields: Record<string, keyof Pick<NonNullable<Parameters<typeof updateBotSettings>[0]>, "channel_url" | "support_url" | "platform_1_url" | "platform_2_url" | "app_base_url">> = {
     "/set_channel": "channel_url",
