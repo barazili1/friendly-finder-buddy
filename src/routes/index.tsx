@@ -20,7 +20,9 @@ export const Route = createFileRoute("/")({
     ],
   }),
   beforeLoad: () => {
-    throw redirect({ href: "/site/index.html" });
+    // The original app is launched from its Telegram bot, which passes the
+    // interface language. Default to French so the site opens directly.
+    throw redirect({ href: "/site/index.html?lang=fr" });
   },
   component: () => null,
 });
