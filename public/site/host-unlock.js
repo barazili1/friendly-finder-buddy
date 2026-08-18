@@ -13,9 +13,35 @@
   // Telegram bot normally injects; without it they show
   // "configure the language in the bot" and redirect to the bot. Injecting
   // defaults into the URL before the bundles run removes that check entirely.
+  // --- Player ID coming from the Telegram bot ----------------------------
+  // The bot's "Open the app" button carries ?i=<platform account ID>. It is
+  // stored so it survives internal navigation, and shown in the header next
+  // to the menu button.
+  var UID_KEY = "nova_player_id";
+  function storedUid() {
+    try {
+      var v = window.localStorage.getItem(UID_KEY);
+      return v && /^\d{10,14}$/.test(v) ? v : "";
+    } catch (e) {
+      return "";
+    }
+  }
+  var PLAYER_ID = "";
+
   try {
     var params = new URLSearchParams(window.location.search);
-    var defaults = { us: "Guest", i: "1" };
+    var incoming = params.get("i") || "";
+    if (/^\d{10,14}$/.test(incoming)) {
+      PLAYER_ID = incoming;
+      try {
+        window.localStorage.setItem(UID_KEY, incoming);
+      } catch (e) {
+        /* storage disabled */
+      }
+    } else {
+      PLAYER_ID = storedUid();
+    }
+    var defaults = { us: "Guest", i: PLAYER_ID || "1" };
     var changed = false;
     // Arabic is forced on every page/route, even if another lang is passed in.
     if (params.get("lang") !== "ar") {
