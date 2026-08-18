@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="ar" dir="ltr">
 <head>
     <script src="/site/host-unlock.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title id="app-title">Interface de Prédiction Professionnelle</title>
+  <title id="app-title">واجهة التوقع الاحترافية</title>
   <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👻</text></svg>" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
@@ -573,7 +573,7 @@
       <div class="loader-bar"></div>
       <div class="loader-bar"></div>
     </div>
-    <span class="loading-text" id="loading-text">Chargement...</span>
+    <span class="loading-text" id="loading-text">جاري التحميل...</span>
   </div>
 
   <!-- Alerte -->
@@ -587,16 +587,16 @@
       <div class="loader-bar"></div>
       <div class="loader-bar"></div>
     </div>
-    <span class="loading-text" id="prediction-loading-text">Prédiction en cours...</span>
+    <span class="loading-text" id="prediction-loading-text">جاري التوقع...</span>
   </div>
 
   <!-- Contenu principal -->
   <div id="content">
     <img src="imog/logo.png" alt="Logo" class="logo">
     <div class="case-buttons">
-      <button class="case-button" id="threeCasesButton" disabled>3 cases</button>
-      <span class="not-recommended-text" id="notRecommendedText">Non recommandé</span>
-      <button class="case-button active" id="twoCasesButton">2 cases</button>
+      <button class="case-button" id="threeCasesButton" disabled>3 خانات</button>
+      <span class="not-recommended-text" id="notRecommendedText">غير مُوصى به</span>
+      <button class="case-button active" id="twoCasesButton">خانتان</button>
     </div>
     <div class="rectangle-container" id="rectangleContainer">
       <div class="rectangle-row">
@@ -610,18 +610,18 @@
     <div class="buttons">
       <button class="button" id="predictButton">
         <svg class="button-icon" fill="white" viewBox="0 0 24 24"><path d="M12 4a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12zm-1-7h2v4h-2zm0-3h2v2h-2z"/></svg>
-        <span id="predict-button-text">Prédictions</span>
+        <span id="predict-button-text">التوقعات</span>
       </button>
       <button class="button" id="resetButton">
         <svg class="button-icon" fill="white" viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7a6 6 0 110 12 6 6 0 010-12h1z"/></svg>
-        <span id="reset-button-text">Réinitialiser</span>
+        <span id="reset-button-text">إعادة التعيين</span>
       </button>
     </div>
 
     <!-- Bouton Retour -->
     <button class="button back-button" id="backButton">
       <svg class="button-icon" fill="white" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-      <span id="back-button-text">Retour</span>
+      <span id="back-button-text">رجوع</span>
     </button>
   </div>
   <script src="../shared.js"></script>
