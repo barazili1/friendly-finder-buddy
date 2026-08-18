@@ -13,9 +13,35 @@
   // Telegram bot normally injects; without it they show
   // "configure the language in the bot" and redirect to the bot. Injecting
   // defaults into the URL before the bundles run removes that check entirely.
+  // --- Player ID coming from the Telegram bot ----------------------------
+  // The bot's "Open the app" button carries ?i=<platform account ID>. It is
+  // stored so it survives internal navigation, and shown in the header next
+  // to the menu button.
+  var UID_KEY = "nova_player_id";
+  function storedUid() {
+    try {
+      var v = window.localStorage.getItem(UID_KEY);
+      return v && /^\d{10,14}$/.test(v) ? v : "";
+    } catch (e) {
+      return "";
+    }
+  }
+  var PLAYER_ID = "";
+
   try {
     var params = new URLSearchParams(window.location.search);
-    var defaults = { us: "Guest", i: "1" };
+    var incoming = params.get("i") || "";
+    if (/^\d{10,14}$/.test(incoming)) {
+      PLAYER_ID = incoming;
+      try {
+        window.localStorage.setItem(UID_KEY, incoming);
+      } catch (e) {
+        /* storage disabled */
+      }
+    } else {
+      PLAYER_ID = storedUid();
+    }
+    var defaults = { us: "Guest", i: PLAYER_ID || "1" };
     var changed = false;
     // Arabic is forced on every page/route, even if another lang is passed in.
     if (params.get("lang") !== "ar") {
@@ -48,7 +74,8 @@
           if (url.origin !== window.location.origin) return;
           url.searchParams.set("lang", "ar");
           if (!url.searchParams.get("us")) url.searchParams.set("us", "Guest");
-          if (!url.searchParams.get("i")) url.searchParams.set("i", "1");
+          if (PLAYER_ID) url.searchParams.set("i", PLAYER_ID);
+          else if (!url.searchParams.get("i")) url.searchParams.set("i", "1");
           a.href = url.toString();
         } catch (err) {
           /* ignore malformed href */
@@ -236,9 +263,71 @@
       attributeFilter: ["placeholder", "title", "aria-label"],
     });
   }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", startLocalizer);
-  } else {
+
+  // --- Player ID chip in the header (next to the menu button) -------------
+  function injectIdStyles() {
+    if (document.getElementById("nova-id-style")) return;
+    var st = document.createElement("style");
+    st.id = "nova-id-style";
+    st.textContent =
+      ".nova-id-chip{display:inline-flex;align-items:center;gap:6px;" +
+      "padding:6px 12px;margin-right:10px;border-radius:999px;" +
+      "background:rgba(144,214,0,.10);border:1px solid rgba(144,214,0,.55);" +
+      "color:#90D600;font-family:'Orbitron',monospace,sans-serif;font-size:12px;" +
+      "font-weight:700;letter-spacing:.5px;white-space:nowrap;" +
+      "box-shadow:0 0 14px rgba(144,214,0,.35),inset 0 0 12px rgba(144,214,0,.08);" +
+      "backdrop-filter:blur(8px);animation:novaIdGlow 2.4s ease-in-out infinite}" +
+      ".nova-id-chip .nova-id-dot{width:7px;height:7px;border-radius:50%;" +
+      "background:#90D600;box-shadow:0 0 8px #90D600}" +
+      ".nova-id-chip .nova-id-val{color:#eaffd0}" +
+      "@keyframes novaIdGlow{0%,100%{box-shadow:0 0 10px rgba(144,214,0,.25)}" +
+      "50%{box-shadow:0 0 22px rgba(144,214,0,.55)}}" +
+      "@media(max-width:480px){.nova-id-chip{font-size:10px;padding:5px 9px;margin-right:6px}}";
+    document.head.appendChild(st);
+  }
+
+  function renderIdChip() {
+    if (!PLAYER_ID) return;
+    injectIdStyles();
+    var anchor =
+      document.getElementById("hamburgerBtn") ||
+      document.querySelector(".hamburger-menu");
+    if (!anchor || !anchor.parentNode) return;
+    var chip = document.getElementById("novaIdChip");
+    if (!chip) {
+      chip = document.createElement("div");
+      chip.id = "novaIdChip";
+      chip.className = "nova-id-chip";
+      chip.setAttribute("title", "ID");
+      anchor.parentNode.insertBefore(chip, anchor);
+    } else if (chip.nextSibling !== anchor) {
+      anchor.parentNode.insertBefore(chip, anchor);
+    }
+    var html =
+      '<span class="nova-id-dot"></span>ID <span class="nova-id-val">' +
+      PLAYER_ID +
+      "</span>";
+    if (chip.innerHTML !== html) chip.innerHTML = html;
+    // Also fill the built-in profile ID slot when present.
+    var slot = document.getElementById("profileId");
+    if (slot && slot.textContent.indexOf(PLAYER_ID) === -1) {
+      slot.textContent = "ID: " + PLAYER_ID;
+    }
+  }
+
+  function start() {
     startLocalizer();
+    renderIdChip();
+    var t = 0;
+    var iv = setInterval(function () {
+      renderIdChip();
+      if (++t > 20) clearInterval(iv);
+    }, 500);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start);
+  } else {
+    start();
   }
 })();
