@@ -8,6 +8,32 @@
  * domain and blocks the forced redirect, without touching the bundles.
  */
 (function () {
+  // --- Bot / language verification removal -------------------------------
+  // The bundles require a `lang` (and optionally user) parameter that the
+  // Telegram bot normally injects; without it they show
+  // "configure the language in the bot" and redirect to the bot. Injecting
+  // defaults into the URL before the bundles run removes that check entirely.
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var defaults = { lang: "fr", us: "Guest", i: "1" };
+    var changed = false;
+    Object.keys(defaults).forEach(function (key) {
+      if (!params.get(key)) {
+        params.set(key, defaults[key]);
+        changed = true;
+      }
+    });
+    if (changed) {
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname + "?" + params.toString() + window.location.hash,
+      );
+    }
+  } catch (e) {
+    /* URL API unavailable: ignored */
+  }
+
   var LOCKED_HOSTS = [
     "gerarrd7.github.io/cassaprono/",
     "gerard7.github.io/cassaprono/",
@@ -15,7 +41,8 @@
     "amazing-jelly-603fc6.netlify.app",
     "5510",
   ];
-  var REDIRECT_TARGETS = ["netlify.app", "github.io"];
+  var REDIRECT_TARGETS = ["netlify.app", "github.io", "t.me/"];
+
 
   function isLock(needle) {
     return typeof needle === "string" && LOCKED_HOSTS.indexOf(needle) !== -1;
