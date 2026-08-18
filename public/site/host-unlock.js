@@ -11,7 +11,7 @@
   var LOCKED_HOSTS = [
     "gerarrd7.github.io/cassaprono/",
     "gerard7.github.io/cassaprono/",
-    "github.io/cassaprono",
+    
     "amazing-jelly-603fc6.netlify.app",
     "5510",
   ];
