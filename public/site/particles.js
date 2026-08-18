@@ -5,17 +5,18 @@
 (function () {
   var COUNT = 80;
   var COLOR = "#90D600";
-  var LINK_DISTANCE = 140;
+  var LINK_DISTANCE = 130;
 
   function start() {
     if (document.getElementById("neon-particles")) return;
 
     var canvas = document.createElement("canvas");
     canvas.id = "neon-particles";
-    (document.body || document.documentElement).insertBefore(
-      canvas,
-      (document.body || document.documentElement).firstChild,
+    canvas.setAttribute(
+      "style",
+      "position:fixed;inset:0;width:100vw;height:100vh;z-index:1;pointer-events:none;display:block;background:transparent;",
     );
+    (document.body || document.documentElement).appendChild(canvas);
 
     var ctx = canvas.getContext("2d");
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
