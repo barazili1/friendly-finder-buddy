@@ -88,4 +88,130 @@
     if (blocked(url)) return null;
     return openOriginal.apply(window, arguments);
   };
+
+  // --- Arabic localization layer -----------------------------------------
+  // Some bundles (obfuscated) rewrite the UI text in French at runtime, so the
+  // translation is applied live on the DOM. Layout stays LTR.
+  var DICT = {
+    "Bienvenue !": "مرحبًا!",
+    "Avant de commencer, veuillez cliquer sur les": "قبل أن تبدأ، يرجى الضغط على",
+    "trois barres du menu": "القائمة (ثلاثة خطوط)",
+    "(\u261a) en haut \u00e0 droite de la page d'accueil, puis lire les": "(\u2630) أعلى يمين الصفحة الرئيسية، ثم اقرأ",
+    "(\u2630) en haut \u00e0 droite de la page d'accueil, puis lire les": "(\u2630) أعلى يمين الصفحة الرئيسية، ثم اقرأ",
+    ". Merci !": ". شكرًا!",
+    "Conditions d'utilisation": "شروط الاستخدام",
+    "Nos Jeux": "ألعابنا",
+    "Nos Jeux Premium": "ألعابنا المميزة",
+    "Tout": "الكل",
+    "Favoris": "المفضلة",
+    "Favori": "مفضلة",
+    "Autres bet": "رهانات أخرى",
+    "Autres Bets": "رهانات أخرى",
+    "Menu": "القائمة",
+    "Ouvrir le menu": "فتح القائمة",
+    "Fermer le menu": "إغلاق القائمة",
+    "Changer le mode": "تغيير الوضع",
+    "Mode Sombre": "الوضع الليلي",
+    "Profil utilisateur": "الملف الشخصي",
+    "Rechercher un jeu...": "ابحث عن لعبة...",
+    "Retour en haut": "العودة للأعلى",
+    "Chargement de votre jeu...": "جاري تحميل لعبتك...",
+    "Chargement...": "جاري التحميل...",
+    "Loading...": "جاري التحميل...",
+    "Pr\u00e9diction intelligente": "توقع ذكي",
+    "Prediction intelligente": "توقع ذكي",
+    "Syst\u00e8me de pr\u00e9diction intelligent": "نظام توقع ذكي",
+    "Systeme de prediction intelligent": "نظام توقع ذكي",
+    "Interface de Pr\u00e9diction": "واجهة التوقع",
+    "Interface de Pr\u00e9diction Professionnelle": "واجهة التوقع الاحترافية",
+    "Pr\u00e9diction de course": "توقع السباق",
+    "Pr\u00e9dictions": "التوقعات",
+    "Pr\u00e9diction": "التوقع",
+    "PR\u00c9DICTION": "التوقع",
+    "PREDICTION": "التوقع",
+    "Pr\u00e9diction en cours...": "جاري التوقع...",
+    "R\u00e9initialiser": "إعادة التعيين",
+    "R\u00e9initialiser le jeu": "إعادة تعيين اللعبة",
+    "Lancer la pr\u00e9diction": "بدء التوقع",
+    "Retour": "رجوع",
+    "\u2190 Retour": "\u2190 رجوع",
+    "\ud83d\udd04 Retour": "\ud83d\udd04 رجوع",
+    "Retour \u00e0 la page pr\u00e9c\u00e9dente": "الرجوع إلى الصفحة السابقة",
+    "Cliquez sur NEXT SIGNAL": "اضغط على NEXT SIGNAL",
+    "Cliquez sur\nNEXT SIGNAL": "اضغط على\nNEXT SIGNAL",
+    "Cliquez sur PR\u00c9DICTION": "اضغط على التوقع",
+    "Cliquez sur\nPR\u00c9DICTION": "اضغط على\nالتوقع",
+    "Limite atteinte ! Cliquez sur R\u00e9initialiser": "تم الوصول إلى الحد! اضغط على إعادة التعيين",
+    "\ud83c\udfaf Prochaine manche": "\ud83c\udfaf الجولة القادمة",
+    "Prochaine manche": "الجولة القادمة",
+    "Patience requise": "مطلوب بعض الصبر",
+    "Veuillez patienter pendant": "يرجى الانتظار لمدة",
+    "avant d'obtenir le coefficient suivant": "قبل الحصول على المعامل التالي",
+    "D\u00e9sol\u00e9, an error occurred": "عذرًا، حدث خطأ",
+    "Erreur de r\u00e9ception": "خطأ في الاستقبال",
+    "Bient\u00f4t Disponible": "متاح قريبًا",
+    "Le jeu est maintenant disponible !": "اللعبة متاحة الآن!",
+    "Diminuer le nombre de pi\u00e8ges": "تقليل عدد الفخاخ",
+    "Augmenter le nombre de pi\u00e8ges": "زيادة عدد الفخاخ",
+    "Non recommand\u00e9": "غير مُوصى به",
+    "FACILE": "سهل",
+    "MOYEN": "متوسط",
+    "secondes": "ثانية",
+    "seconde": "ثانية"
+  };
+  var PLAY = /^Jouer \u00e0 (.+)$/;
+  function translate(str) {
+    if (typeof str !== "string") return str;
+    var t = str.trim();
+    if (!t) return str;
+    if (DICT[t]) return str.replace(t, DICT[t]);
+    var m = PLAY.exec(t);
+    if (m) return str.replace(t, "العب " + m[1]);
+    return str;
+  }
+  function walk(node) {
+    if (!node) return;
+    if (node.nodeType === 3) {
+      var out = translate(node.nodeValue);
+      if (out !== node.nodeValue) node.nodeValue = out;
+      return;
+    }
+    if (node.nodeType !== 1) return;
+    var tag = node.tagName;
+    if (tag === "SCRIPT" || tag === "STYLE") return;
+    ["placeholder", "title", "aria-label"].forEach(function (attr) {
+      var v = node.getAttribute && node.getAttribute(attr);
+      if (v) {
+        var out = translate(v);
+        if (out !== v) node.setAttribute(attr, out);
+      }
+    });
+    for (var i = 0; i < node.childNodes.length; i++) walk(node.childNodes[i]);
+  }
+  function localize() {
+    document.documentElement.setAttribute("lang", "ar");
+    document.documentElement.setAttribute("dir", "ltr");
+    walk(document.body);
+  }
+  function startLocalizer() {
+    localize();
+    new MutationObserver(function (records) {
+      records.forEach(function (r) {
+        if (r.type === "characterData") walk(r.target);
+        else if (r.type === "attributes") walk(r.target);
+        else for (var i = 0; i < r.addedNodes.length; i++) walk(r.addedNodes[i]);
+      });
+    }).observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ["placeholder", "title", "aria-label"],
+    });
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", startLocalizer);
+  } else {
+    startLocalizer();
+  }
 })();
