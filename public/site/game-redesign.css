@@ -47,12 +47,118 @@ body::before {
   position: relative;
   z-index: 3;
 }
+
+/* Preserve the original viewport positioning. The generic content-layer rule
+   above must never turn navigation and overlays into normal document flow. */
+.top-nav {
+  position: fixed !important;
+  inset: 0 0 auto 0 !important;
+  width: 100% !important;
+}
+.sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  left: auto !important;
+  height: 100dvh !important;
+}
+.overlay,
+.loading-overlay,
+.intro-animation {
+  position: fixed !important;
+  inset: 0 !important;
+}
+.back-to-top {
+  position: fixed !important;
+}
 .sidebar,
 .overlay,
 .loading-overlay,
 .intro-animation,
 .back-to-top {
   z-index: 10050 !important;
+}
+
+@media (max-width: 600px) {
+  .top-nav {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-height: 66px !important;
+    padding: 10px 12px !important;
+  }
+
+  .brand-section {
+    min-width: 0 !important;
+    gap: 9px !important;
+  }
+
+  .brand-logo {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    padding: 0 !important;
+    border-radius: 12px !important;
+    flex: 0 0 38px !important;
+  }
+
+  .brand-name {
+    min-width: 0 !important;
+    max-width: 145px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 17px !important;
+    letter-spacing: 0 !important;
+  }
+
+  .profile-section {
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    min-width: 0 !important;
+  }
+
+  .profile-btn {
+    display: none !important;
+  }
+
+  .nova-id-chip {
+    max-width: 124px !important;
+    margin: 0 !important;
+    padding: 5px 8px !important;
+    overflow: hidden !important;
+    font-size: 9px !important;
+  }
+
+  .nova-id-chip .nova-id-val {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .hamburger-menu {
+    width: 42px !important;
+    height: 42px !important;
+    padding: 8px !important;
+    flex: 0 0 42px !important;
+    border-radius: 12px !important;
+  }
+
+  .sidebar {
+    width: min(82vw, 320px) !important;
+    right: min(-82vw, -320px) !important;
+    overflow-y: auto !important;
+  }
+
+  .sidebar.active {
+    right: 0 !important;
+  }
+
+  .sidebar-header,
+  .sidebar-menu {
+    padding: 20px !important;
+  }
 }
 
 /* ---------------- Header / branding ---------------- */
