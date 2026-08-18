@@ -74,7 +74,8 @@
           if (url.origin !== window.location.origin) return;
           url.searchParams.set("lang", "ar");
           if (!url.searchParams.get("us")) url.searchParams.set("us", "Guest");
-          if (!url.searchParams.get("i")) url.searchParams.set("i", "1");
+          if (PLAYER_ID) url.searchParams.set("i", PLAYER_ID);
+          else if (!url.searchParams.get("i")) url.searchParams.set("i", "1");
           a.href = url.toString();
         } catch (err) {
           /* ignore malformed href */
