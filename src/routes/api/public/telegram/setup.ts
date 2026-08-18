@@ -38,16 +38,18 @@ export const Route = createFileRoute("/api/public/telegram/setup")({
           }),
         }).then((r) => r.json());
 
-        const appBase = (process.env["PUBLIC_BASE_URL"] || url.origin).replace(/\/+$/, "");
+        // No Mini App: keep the default commands menu button.
         const menu = await fetch(`${api}/setChatMenuButton`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ menu_button: { type: "commands" } }),
+        }).then((r) => r.json());
+
+        await fetch(`${api}/setMyCommands`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            menu_button: {
-              type: "web_app",
-              text: "NOVA VIP",
-              web_app: { url: `${appBase}/site/index.html?lang=ar&us=Guest&i=1` },
-            },
+            commands: [{ command: "start", description: "بدء التحقق / Start" }],
           }),
         }).then((r) => r.json());
 
